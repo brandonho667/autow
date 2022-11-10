@@ -10,6 +10,8 @@ class LaneFollower:
     def __init__(self):
         self.stopped = False
 
+        self.vesc = vesc.Vesc()
+
         # Create pipeline
         self.pipeline = dai.Pipeline()
         self.cam = self.pipeline.create(dai.node.ColorCamera)
@@ -37,8 +39,8 @@ class LaneFollower:
                 copy = np.copy(frame)
                 edges = canny(copy)
                 isolated = region(edges)
-                show_image('edges', edges)
-                show_image('isolated', isolated)
+                # show_image('edges', edges)
+                # show_image('isolated', isolated)
 
                 # DRAWING LINES: (order of params) --> region of interest, bin size (P, theta), min intersections needed, placeholder array,
                 lines = cv2.HoughLinesP(
@@ -49,12 +51,29 @@ class LaneFollower:
                 averaged_lines = average(copy, lines)
                 print(
                     f"averaged_lines: {averaged_lines}, {averaged_lines.shape}")
-                black_lines = display_lines(copy, averaged_lines)
-                # taking wighted sum of original image and lane lines image
-                lanes = cv2.addWeighted(copy, 0.8, black_lines, 1, 1)
-                print(lanes)
-                show_image('lanes', lanes)
+                self.vesc.run(self.calc_angle(
+                    copy.shape[1], lines[0], lines[1]), 0.1)
+                # black_lines = display_lines(copy, averaged_lines)
+                # # taking wighted sum of original image and lane lines image
+                # lanes = cv2.addWeighted(copy, 0.8, black_lines, 1, 1)
+                # show_image('lanes', lanes)
             device.close()
+
+    def find_intersection(self, line1, line2):
+        x1, y1, x2, y2 = line1
+        x3, y3, x4, y4 = line2
+        px = x2-x1
+        py = y2-y1
+        dAB = px*px + py*py
+        u = ((x4 - x3) * px + (y4 - y3) * py) / float(dAB)
+        x = x1 + u * px
+        y = y1 + u * py
+        return x, y
+
+    # find the intersection point of two lines for angle
+    def calc_angle(self, width, line1, line2, alpha=0.5):
+        x, y = self.find_intersection(line1, line2)
+        return alpha*(x-width)
 
     def stop(self, signal, frame):
         print("gracefully stopping...")
