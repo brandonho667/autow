@@ -10,7 +10,7 @@ class LaneFollower:
     def __init__(self):
         self.stopped = False
 
-        self.vesc = vesc.Vesc()
+        # self.vesc = vesc.VESC("/dev/ttyACM0")
 
         # Create pipeline
         self.pipeline = dai.Pipeline()
@@ -35,28 +35,36 @@ class LaneFollower:
                     print(' No captured frame -- yikes!')
                     continue
                 frame = cv2.cvtColor(frame.getCvFrame(), cv2.COLOR_BGR2RGB)
+                frame = cv2.flip(frame, -1)
 
                 copy = np.copy(frame)
-                edges = canny(copy)
+                edges = canny(gauss(copy))
                 isolated = region(edges)
-                # show_image('edges', edges)
-                # show_image('isolated', isolated)
+                show_image('edges', edges)
+                show_image('isolated', isolated)
 
                 # DRAWING LINES: (order of params) --> region of interest, bin size (P, theta), min intersections needed, placeholder array,
                 lines = cv2.HoughLinesP(
                     isolated, 2, np.pi/180, 100, np.array([]), minLineLength=40, maxLineGap=5)
-                if lines is None:
+                if lines is None or len(lines) < 2:
                     continue
                 print(f"lines: {lines}, {lines.shape}")
                 averaged_lines = average(copy, lines)
                 print(
                     f"averaged_lines: {averaged_lines}, {averaged_lines.shape}")
-                self.vesc.run(self.calc_angle(
-                    copy.shape[1], lines[0], lines[1]), 0.1)
-                # black_lines = display_lines(copy, averaged_lines)
-                # # taking wighted sum of original image and lane lines image
-                # lanes = cv2.addWeighted(copy, 0.8, black_lines, 1, 1)
-                # show_image('lanes', lanes)
+
+                print(f"pt 1 type {type(averaged_lines[0][0])}")
+                intersection = self.find_intersection(
+                    averaged_lines[0], averaged_lines[1])
+                print(f"intersection @ {intersection}")
+                # self.vesc.run(self.calc_angle(
+                #     copy.shape[1], lines[0], lines[1]), 0.1)
+                black_lines = display_lines(copy, averaged_lines)
+                # taking wighted sum of original image and lane lines image
+                lanes = cv2.addWeighted(copy, 0.8, black_lines, 1, 1)
+                cv2.circle(lanes, (int(intersection[0]), int(
+                    intersection[1])), 5, (0, 0, 255), -1)
+                show_image('lanes', lanes)
             device.close()
 
     def find_intersection(self, line1, line2):

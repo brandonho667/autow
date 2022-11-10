@@ -1,6 +1,7 @@
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+import sys
 
 
 def show_image(name, img):  # function for displaying the image
@@ -24,12 +25,7 @@ def gauss(image):
 
 
 def canny(image):
-    img_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    # show_image('gray',img_gray)
-    img_blur = gauss(img_gray)
-    # show_image('blur',img_blur)
-    edges = cv2.Canny(img_blur, 50, 150)
-    return edges
+    return cv2.Canny(image, 50, 200)
 
 
 def region(image):
@@ -83,12 +79,16 @@ def average(image, lines):
     right_line = [width, 0, width, height]
     if len(left) != 0:
         left_average = np.average(left, axis=0)
-        left_line = make_points(image, left_average)
-        print(f"valid left line {left_line}")
+        pll = make_points(image, left_average)
+        if sum([abs(x) for x in pll]) < 1e5:
+            left_line = pll
+            print(f"valid left line {left_line}")
     if len(right) != 0:
         right_average = np.average(right, axis=0)
-        right_line = make_points(image, right_average)
-        print(f"valid right line {right_line}")
+        prl = make_points(image, right_average)
+        if sum([abs(x) for x in prl]) < 1e5:
+            right_line = prl
+            print(f"valid right line {right_line}")
 
     return np.array([left_line, right_line])
 
