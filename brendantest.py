@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-image = cv2.imread('track_image.jpg')  # Reading the image file
+image = cv2.imread('IMG_1123.jpeg')  # Reading the image file
 print(image.shape)
 cv2.imshow('track', image)
 cv2.waitKey(0)
@@ -16,7 +16,7 @@ lane_gray = cv2.cvtColor(lane_image, cv2.COLOR_BGR2GRAY)
 cv2.imshow('gray', lane_gray)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
-lane_blur = cv2.GaussianBlur(lane_gray, (5, 5), 0)
+lane_blur = cv2.GaussianBlur(lane_gray, (5, 5), 3)
 cv2.imshow('blur', lane_blur)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
@@ -35,7 +35,7 @@ def show_image(name, img):  # function for displaying the image
 def find_canny(img, thresh_low, thresh_high):  # function for implementing the canny
     img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     # show_image('gray',img_gray)
-    img_blur = cv2.GaussianBlur(img_gray, (5, 5), 0)
+    img_blur = cv2.GaussianBlur(img_gray, (5, 5), 3)
     # show_image('blur',img_blur)
     img_canny = cv2.Canny(img_blur, thresh_low, thresh_high)
     show_image('Canny', img_canny)
@@ -44,8 +44,8 @@ def find_canny(img, thresh_low, thresh_high):  # function for implementing the c
 
 def region_of_interest(image):  # function for extracting region of interest
     # bounds in (x,y) format
-    bounds = np.array([[[0, 250], [0, 200], [150, 100], [500, 100], [
-                      650, 200], [650, 250]]], dtype=np.int32)
+    bounds = np.array(
+        [[[0, 80], [0, 200], [650, 200], [650, 80]]], dtype=np.int32)
 
     # bounds = np.array([[[0,image.shape[0]],[0,image.shape[0]/2],[900,image.shape[0]/2],[900,image.shape[0]]]],dtype=np.int32)
     mask = np.zeros_like(image)
@@ -61,7 +61,6 @@ def draw_lines(img, lines):  # function for drawing lines on black mask
     for points in lines:
         x1, y1, x2, y2 = points[0]
         cv2.line(mask_lines, (x1, y1), (x2, y2), [0, 0, 255], 2)
-
     return mask_lines
 
 
