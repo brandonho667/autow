@@ -4,6 +4,7 @@ import numpy as np
 from utils.lane_detect import *
 import depthai as dai
 import signal
+import numpy as np
 
 
 class LaneFollower:
@@ -70,12 +71,14 @@ class LaneFollower:
     def find_intersection(self, line1, line2):
         x1, y1, x2, y2 = line1
         x3, y3, x4, y4 = line2
-        px = x2-x1
-        py = y2-y1
-        dAB = px*px + py*py
-        u = ((x4 - x3) * px + (y4 - y3) * py) / float(dAB)
-        x = x1 + u * px
-        y = y1 + u * py
+        m1 = (y2-y1)/(x2-x1)
+        m2 = (y4-y3)/(x4-x3)
+        c1 = -m1*x1 + y1
+        c2 = -m2*x3 + y3
+        A1 = [[-m1, 1], [-m2, 1]]
+        A = np.array(A1)
+        B = np.array([c1, c2])
+        [x, y] = np.linalg.inv(A).dot(B)
         return x, y
 
     # find the intersection point of two lines for angle
