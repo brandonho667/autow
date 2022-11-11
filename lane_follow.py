@@ -49,42 +49,54 @@ class LaneFollower:
                     isolated, 2, np.pi/180, 100, np.array([]), minLineLength=40, maxLineGap=5)
                 if lines is None or len(lines) < 2:
                     continue
-                print(f"lines: {lines}, {lines.shape}")
+                # print(f"lines: {lines}, {lines.shape}")
                 averaged_lines = average(copy, lines)
-                print(
-                    f"averaged_lines: {averaged_lines}, {averaged_lines.shape}")
+                # print(
+                #     f"averaged_lines: {averaged_lines}, {averaged_lines.shape}")
 
-                print(f"pt 1 type {type(averaged_lines[0][0])}")
+                # print(f"pt 1 type {type(averaged_lines[0][0])}")
                 intersection = self.find_intersection(
                     averaged_lines[0], averaged_lines[1])
-                print(f"intersection @ {intersection}")
-                # self.vesc.run(self.calc_angle(
-                #     copy.shape[1], lines[0], lines[1]), 0.1)
-                black_lines = display_lines(copy, averaged_lines)
+                if intersection == -1:
+                    intersection = (copy.shape[1]//2, copy.shape[0]//2)
+                # print(f"intersection @ {intersection}")
+                self.vesc.run(self.calc_angle(
+                    copy.shape[1], intersection), 0.2)
+                # black_lines = display_lines(copy, averaged_lines)
                 # taking wighted sum of original image and lane lines image
-                lanes = cv2.addWeighted(copy, 0.8, black_lines, 1, 1)
-                cv2.circle(lanes, (int(intersection[0]), int(
-                    intersection[1])), 50, (0, 0, 255), -1)
-                show_image('lanes', lanes)
+                # lanes = cv2.addWeighted(copy, 0.8, black_lines, 1, 1)
+                # cv2.circle(lanes, (int(intersection[0]), int(
+                #     intersection[1])), 50, (0, 0, 255), -1)
+                # show_image('lanes', lanes)
             device.close()
 
     def find_intersection(self, line1, line2):
         x1, y1, x2, y2 = line1
         x3, y3, x4, y4 = line2
-        m1 = (y2-y1)/(x2-x1)
-        m2 = (y4-y3)/(x4-x3)
-        c1 = -m1*x1 + y1
-        c2 = -m2*x3 + y3
-        A1 = [[-m1, 1], [-m2, 1]]
-        A = np.array(A1)
-        B = np.array([c1, c2])
-        [x, y] = np.linalg.inv(A).dot(B)
-        return x, y
+        a1 = y2-y1
+        b1 = x1-x2
+        c1 = a1*(x1) + b1*(y1)
 
-    # find the intersection point of two lines for angle
-    def calc_angle(self, width, line1, line2, alpha=0.5):
-        x, y = self.find_intersection(line1, line2)
-        return alpha*(x-width)
+        # Line CD represented as a2x + b2y = c2
+        a2 = y4-y3
+        b2 = x3-x4
+        c2 = a2*(x3) + b2*(y3)
+
+        determinant = a1*b2 - a2*b1
+        if (determinant == 0):
+            # The lines are parallel. This is simplified
+            # by returning a pair of FLT_MAX
+            return -1
+        else:
+            x = (b2*c1 - b1*c2)/determinant
+            y = (a1*c2 - a2*c1)/determinant
+            return x, y
+
+    # calc steering for given center point
+    def calc_angle(self, width, center_pt):
+        x, y = center_pt
+        print(x/width)
+        return x/width
 
     def stop(self, signal, frame):
         print("gracefully stopping...")

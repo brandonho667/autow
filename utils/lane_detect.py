@@ -25,7 +25,7 @@ def gauss(image):
 
 
 def canny(image):
-    return cv2.Canny(image, 50, 200)
+    return cv2.Canny(image, 50, 150)
 
 
 def region(image):
