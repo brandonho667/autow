@@ -64,7 +64,7 @@ class LaneFollower:
                 # taking wighted sum of original image and lane lines image
                 lanes = cv2.addWeighted(copy, 0.8, black_lines, 1, 1)
                 cv2.circle(lanes, (int(intersection[0]), int(
-                    intersection[1])), 5, (0, 0, 255), -1)
+                    intersection[1])), 50, (0, 0, 255), -1)
                 show_image('lanes', lanes)
             device.close()
 
