@@ -24,6 +24,8 @@ class LaneFollower:
         self.xout.setStreamName("rgb")
         self.cam.preview.link(self.xout.input)
 
+        self.steer_buff = []
+
     def run(self):
         # Connect to device and start pipeline
         with dai.Device(self.pipeline) as device:
@@ -41,8 +43,8 @@ class LaneFollower:
                 copy = np.copy(frame)
                 edges = canny(gauss(copy))
                 isolated = region(edges)
-                show_image('edges', edges)
-                show_image('isolated', isolated)
+                # show_image('edges', edges)
+                # show_image('isolated', isolated)
 
                 # DRAWING LINES: (order of params) --> region of interest, bin size (P, theta), min intersections needed, placeholder array,
                 lines = cv2.HoughLinesP(
@@ -60,8 +62,12 @@ class LaneFollower:
                 if intersection == -1:
                     intersection = (copy.shape[1]//2, copy.shape[0]//2)
                 # print(f"intersection @ {intersection}")
-                self.vesc.run(self.calc_angle(
-                    copy.shape[1], intersection), 0.2)
+                self.steer_buff.append(
+                    self.calc_angle(copy.shape[1], intersection))
+                if len(self.steer_buff) > 10:
+                    ave_steer = np.mean(self.steer_buff)
+                    self.vesc.run(ave_steer, 0.2)
+                    self.steer_buff = []
                 # black_lines = display_lines(copy, averaged_lines)
                 # taking wighted sum of original image and lane lines image
                 # lanes = cv2.addWeighted(copy, 0.8, black_lines, 1, 1)
