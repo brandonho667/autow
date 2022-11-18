@@ -49,42 +49,39 @@ class Autow:
                 (corners, ids, rejected) = cv2.aruco.detectMarkers(frame, arucoDict,
                                                                    parameters=arucoParams)
                 if len(corners) == 0:
+                    self.vesc.set_throttle(0)
                     continue
                 ids = ids.flatten()
                 if self.target_id not in ids:
+                    self.vesc.set_throttle(0)
                     continue
-                target_corners = corners[ids ==
-                                         self.target_id][0].reshape((4, 2))
+                idx = np.where(ids == self.target_id)[0][0]
+                target_corners = corners[idx][0].reshape((4, 2))
+                # rvec, tvec, _ = aruco.estimatePoseSingleMarkers(target_corners, 0.05, mtx, dist)
                 target_center = np.mean(target_corners, axis=0)
-                target_area = self.get_area(
-                    target_corners[:, 0], target_corners[:, 1])
-
-                print(f"target @ {target_center} with area {target_area}")
+                target_height = abs(target_corners[2, 1]-target_corners[0, 1])
+                # print(f"target @ {target_center} with height {target_height/frame.shape[0]}")
+                print(f"target angle ")
                 self.steer_buff.append(
-                    self.calc_angle(frame.shape[1], target_center[0]))
-                if len(self.steer_buff) >= 7:
+                    self.calc_angle(frame.shape[1], target_center))
+                if len(self.steer_buff) >= 5:
                     ave_steer = np.average(
                         self.steer_buff, weights=np.linspace(0, 1, len(self.steer_buff)))
-                    self.vesc.run(ave_steer, 0.2 - abs(ave_steer-0.5)/5)
+                    self.vesc.run(ave_steer, -(0.2 - abs(ave_steer-0.5)/5)*(1-target_height/frame.shape[0]))
                     self.steer_buff = []
-                # black_lines = display_lines(copy, averaged_lines)
-                # # taking wighted sum of original image and lane lines image
-                # lanes = cv2.addWeighted(copy, 0.8, black_lines, 1, 1)
-                # cv2.circle(lanes, (int(intersection[0]), int(
-                #     intersection[1])), 50, (0, 0, 255), -1)
-                # show_image('lanes', lanes)
+
             device.close()
             self.vesc.run(0.5, 0)
             self.vesc.close()
 
-    def get_area(x, y):
+    def get_area(self, x, y):
         return 0.5*np.abs(np.dot(x, np.roll(y, 1))-np.dot(y, np.roll(x, 1)))
 
     # calc steering for given center point
     def calc_angle(self, width, center_pt):
         x, y = center_pt
         print(x/width)
-        return -x/width
+        return 1-x/width
 
     def stop(self, signal, frame):
         print("gracefully stopping...")
