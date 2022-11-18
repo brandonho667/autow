@@ -9,15 +9,16 @@ def show_image(name, img):  # function for displaying the image
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
+def hsv(image):
+    return cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
 
 def grey(image):
   # convert to grayscale
     image = np.asarray(image)
     return cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 
-  # Apply Gaussian Blur --> Reduce noise and smoothen image
-
-
+  
+# Apply Gaussian Blur --> Reduce noise and smoothen image
 def gauss(image):
     return cv2.GaussianBlur(image, (7, 7), 0)
 
@@ -62,11 +63,11 @@ def average(image, lines):
 
     if lines is not None:
         for line in lines:
-            print(line)
+            # print(line)
             x1, y1, x2, y2 = line.reshape(4)
             # fit line to points, return slope and y-int
             parameters = np.polyfit((x1, x2), (y1, y2), 1)
-            print(parameters)
+            # print(parameters)
             slope = parameters[0]
             y_int = parameters[1]
             # lines on the right have positive slope, and lines on the left have neg slope
@@ -82,19 +83,19 @@ def average(image, lines):
         pll = make_points(image, left_average)
         if sum([abs(x) for x in pll]) < 1e5:
             left_line = pll
-            print(f"valid left line {left_line}")
+            # print(f"valid left line {left_line}")
     if len(right) != 0:
         right_average = np.average(right, axis=0)
         prl = make_points(image, right_average)
         if sum([abs(x) for x in prl]) < 1e5:
             right_line = prl
-            print(f"valid right line {right_line}")
+            # print(f"valid right line {right_line}")
 
     return np.array([left_line, right_line])
 
 
 def make_points(image, average):
-    print(f"average {average}")
+    # print(f"average {average}")
 
     slope, y_int = average
     y1 = image.shape[0]

@@ -53,3 +53,12 @@ class VESC:
     def run(self, angle, throttle):
         self.v.set_servo((angle * self.steering_scale) + self.steering_offset)
         self.v.set_duty_cycle(throttle*self.percent)
+
+    def set_steer(self, angle):
+        self.v.set_servo((angle * self.steering_scale) + self.steering_offset)
+    
+    def set_throttle(self, throttle):
+        self.v.set_duty_cycle(throttle*self.percent)
+
+    def close(self):
+        self.v.stop_heartbeat()

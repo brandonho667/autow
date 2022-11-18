@@ -11,7 +11,8 @@ class LaneFollower:
     def __init__(self):
         self.stopped = False
 
-        # self.vesc = vesc.VESC("/dev/ttyACM0")
+        self.vesc = vesc.VESC("/dev/ttyACM0")
+        self.vesc.run(0.5,0)
 
         # Create pipeline
         self.pipeline = dai.Pipeline()
@@ -29,6 +30,7 @@ class LaneFollower:
     def run(self):
         # Connect to device and start pipeline
         with dai.Device(self.pipeline) as device:
+
             qRgb = device.getOutputQueue(name="rgb", maxSize=4, blocking=False)
             print("UVC running")
             while not self.stopped:
@@ -41,7 +43,7 @@ class LaneFollower:
                 frame = cv2.flip(frame, -1)
 
                 copy = np.copy(frame)
-                edges = canny(gauss(copy))
+                edges = canny(gauss(hsv(copy)))
                 isolated = region(edges)
                 # show_image('edges', edges)
                 # show_image('isolated', isolated)
@@ -64,17 +66,19 @@ class LaneFollower:
                 # print(f"intersection @ {intersection}")
                 self.steer_buff.append(
                     self.calc_angle(copy.shape[1], intersection))
-                if len(self.steer_buff) > 10:
-                    ave_steer = np.mean(self.steer_buff)
-                    self.vesc.run(ave_steer, 0.2)
+                if len(self.steer_buff) >= 7:
+                    ave_steer = np.average(self.steer_buff, weights=np.linspace(0,1,len(self.steer_buff)))
+                    self.vesc.run(ave_steer, 0.2 - abs(ave_steer-0.5)/5)
                     self.steer_buff = []
                 # black_lines = display_lines(copy, averaged_lines)
-                # taking wighted sum of original image and lane lines image
+                # # taking wighted sum of original image and lane lines image
                 # lanes = cv2.addWeighted(copy, 0.8, black_lines, 1, 1)
                 # cv2.circle(lanes, (int(intersection[0]), int(
                 #     intersection[1])), 50, (0, 0, 255), -1)
                 # show_image('lanes', lanes)
             device.close()
+            self.vesc.run(0.5,0)
+            self.vesc.close()
 
     def find_intersection(self, line1, line2):
         x1, y1, x2, y2 = line1
