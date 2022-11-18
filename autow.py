@@ -1,5 +1,6 @@
 from utils import vesc
 import cv2
+import cv2.aruco as aruco
 import numpy as np
 from utils.lane_detect import *
 import depthai as dai
@@ -7,12 +8,11 @@ import signal
 import numpy as np
 
 
-class LaneFollower:
-    def __init__(self):
+class Autow:
+    def __init__(self, target_aruco_id=0):
         self.stopped = False
 
         self.vesc = vesc.VESC("/dev/ttyACM0")
-        self.vesc.run(0.5, 0)
 
         # Create pipeline
         self.pipeline = dai.Pipeline()
@@ -24,10 +24,13 @@ class LaneFollower:
         self.xout = self.pipeline.create(dai.node.XLinkOut)
         self.xout.setStreamName("rgb")
         self.cam.preview.link(self.xout.input)
+        self.target_id = target_aruco_id
 
         self.steer_buff = []
 
     def run(self):
+        arucoDict = aruco.Dictionary_get(aruco.DICT_6X6_50)
+        arucoParams = aruco.DetectorParameters_create()
         # Connect to device and start pipeline
         with dai.Device(self.pipeline) as device:
 
@@ -40,32 +43,25 @@ class LaneFollower:
                     print(' No captured frame -- yikes!')
                     continue
                 frame = cv2.cvtColor(frame.getCvFrame(), cv2.COLOR_BGR2RGB)
-                frame = cv2.flip(frame, -1)
+                # frame = cv2.flip(frame, -1)
 
-                copy = np.copy(frame)
-                edges = canny(gauss(hsv(copy)))
-                isolated = region(edges)
-                # show_image('edges', edges)
-                # show_image('isolated', isolated)
-
-                # DRAWING LINES: (order of params) --> region of interest, bin size (P, theta), min intersections needed, placeholder array,
-                lines = cv2.HoughLinesP(
-                    isolated, 2, np.pi/180, 100, np.array([]), minLineLength=40, maxLineGap=5)
-                if lines is None or len(lines) < 2:
+                # find center of ar tag
+                (corners, ids, rejected) = cv2.aruco.detectMarkers(frame, arucoDict,
+                                                                   parameters=arucoParams)
+                if len(corners) == 0:
                     continue
-                # print(f"lines: {lines}, {lines.shape}")
-                averaged_lines = average(copy, lines)
-                # print(
-                #     f"averaged_lines: {averaged_lines}, {averaged_lines.shape}")
+                ids = ids.flatten()
+                if self.target_id not in ids:
+                    continue
+                target_corners = corners[ids ==
+                                         self.target_id][0].reshape((4, 2))
+                target_center = np.mean(target_corners, axis=0)
+                target_area = self.get_area(
+                    target_corners[:, 0], target_corners[:, 1])
 
-                # print(f"pt 1 type {type(averaged_lines[0][0])}")
-                intersection = self.find_intersection(
-                    averaged_lines[0], averaged_lines[1])
-                if intersection == -1:
-                    intersection = (copy.shape[1]//2, copy.shape[0]//2)
-                print(f"intersection @ {intersection}")
+                print(f"target @ {target_center} with area {target_area}")
                 self.steer_buff.append(
-                    self.calc_angle(copy.shape[1], intersection))
+                    self.calc_angle(frame.shape[1], target_center[0]))
                 if len(self.steer_buff) >= 7:
                     ave_steer = np.average(
                         self.steer_buff, weights=np.linspace(0, 1, len(self.steer_buff)))
@@ -81,33 +77,14 @@ class LaneFollower:
             self.vesc.run(0.5, 0)
             self.vesc.close()
 
-    def find_intersection(self, line1, line2):
-        x1, y1, x2, y2 = line1
-        x3, y3, x4, y4 = line2
-        a1 = y2-y1
-        b1 = x1-x2
-        c1 = a1*(x1) + b1*(y1)
-
-        # Line CD represented as a2x + b2y = c2
-        a2 = y4-y3
-        b2 = x3-x4
-        c2 = a2*(x3) + b2*(y3)
-
-        determinant = a1*b2 - a2*b1
-        if (determinant == 0):
-            # The lines are parallel. This is simplified
-            # by returning a pair of FLT_MAX
-            return -1
-        else:
-            x = (b2*c1 - b1*c2)/determinant
-            y = (a1*c2 - a2*c1)/determinant
-            return x, y
+    def get_area(x, y):
+        return 0.5*np.abs(np.dot(x, np.roll(y, 1))-np.dot(y, np.roll(x, 1)))
 
     # calc steering for given center point
     def calc_angle(self, width, center_pt):
         x, y = center_pt
         print(x/width)
-        return x/width
+        return -x/width
 
     def stop(self, signal, frame):
         print("gracefully stopping...")
@@ -115,7 +92,7 @@ class LaneFollower:
 
 
 def main():
-    lf = LaneFollower()
+    lf = Autow()
     signal.signal(signal.SIGTERM, lf.stop)
     signal.signal(signal.SIGINT, lf.stop)
     lf.run()
