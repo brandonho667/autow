@@ -27,7 +27,7 @@ class Autow:
         self.xout.setStreamName("rgb")
         self.cam.preview.link(self.xout.input)
         self.target_id = target_aruco_id
-        self.hitch_d = 6.5  # cm
+        self.hitch_d = 0.065  # cm
 
         self.steer_buff = []
 
@@ -48,7 +48,7 @@ class Autow:
                 if frame is None:
                     print(' No captured frame -- yikes!')
                     continue
-                frame = cv2.cvtColor(frame.getCvFrame(), cv2.COLOR_BGR2RGB)
+                frame = frame.getCvFrame()
                 # frame = cv2.flip(frame, -1)
 
                 # find center of ar tag
@@ -65,22 +65,25 @@ class Autow:
                 target_corners = corners[idx][0].reshape((4, 2))
                 rvecs, tvecs, _ = aruco.estimatePoseSingleMarkers(
                     corners, 0.05, mtx, dist)
-                theta = (-rvecs[0, 0, 0]/math.pi*rvecs[0, 0, 2])
-                z = tvecs[0, 0, 2]
+                theta = (rvecs[0, 0, 0]/math.pi*rvecs[0, 0, 2])
+                # ts = (rvecs[0, 0, 0],rvecs[0,0,1],rvecs[0, 0, 2])
+                # print(f"theta: {theta}, x: {-tvecs[0,0,0]}, z: {tvecs[0, 0, 2]}")
                 target_center = np.mean(target_corners, axis=0)
                 target_height = abs(target_corners[2, 1]-target_corners[0, 1])
                 # print(f"target @ {target_center} with height {target_height/frame.shape[0]}")
+                if target_height/frame.shape[0] >= 0.28:
+                    self.vesc.set_throttle(0)
+                    continue
                 print(f"target angle ")
                 # self.steer_buff.append(
                 #     self.calc_angle(frame.shape[1], target_center))
                 self.steer_buff.append(self.calc_angle_hitch(
-                    self.hitch_d, z, theta))
-                self.steer_buff.append(theta)
-                if len(self.steer_buff) >= 5:
+                    self.hitch_d, -tvecs[0,0,0], tvecs[0, 0, 2], theta))
+                if len(self.steer_buff) >= 2:
                     ave_steer = np.average(
                         self.steer_buff, weights=np.linspace(0, 1, len(self.steer_buff)))
-                    self.vesc.run(ave_steer, -(0.2 - abs(ave_steer-0.5)/5)
-                                  * (1-target_height/frame.shape[0]))
+                    self.vesc.run(ave_steer, -(0.1 - abs(ave_steer-0.5)/5)
+                                  * (1-target_height/frame.shape[0]/0.4))
                     self.steer_buff = []
 
             device.close()
@@ -90,9 +93,14 @@ class Autow:
     def get_area(self, x, y):
         return 0.5*np.abs(np.dot(x, np.roll(y, 1))-np.dot(y, np.roll(x, 1)))
 
-    def calc_angle_hitch(self, hitch_d, z, theta):
-        theta_s = np.arctan((hitch_d*math.sin(theta)) /
-                            (z-hitch_d*math.cos(theta)))
+    def calc_angle_hitch(self, h, x, z, theta):
+        z = z-0.08
+        theta_a = np.arctan(x/z)
+        print(f"theta_a: {theta_a}")
+        d = math.sqrt(x**2 + z**2)
+        theta_hd = np.arctan(z/x)-(math.pi/2-theta)
+        theta_o = np.arctan(h*math.sin(theta_hd)/(d-h*math.cos(theta_hd)))*x/abs(x)
+        theta_s = (theta_a-theta_o)*3
         print(theta_s)
         return (theta_s+math.pi/2)/math.pi
 
@@ -108,7 +116,7 @@ class Autow:
 
 
 def main():
-    lf = Autow()
+    lf = Autow(target_aruco_id=13)
     signal.signal(signal.SIGTERM, lf.stop)
     signal.signal(signal.SIGINT, lf.stop)
     lf.run()
