@@ -74,11 +74,37 @@ print('Blue count:', Blue_count)
 show_image(name, Blue_mask)
 
 
-def steer_direction(Green_count, Blue_count):
+def blue_green_steer_direction(frame):
+
+    frame = cv2.resize(frame, (600, 400))
+    frame = cv2.flip(frame, -1)
+    cropped = crop_bottom_half(frame)
+    frame = gauss(cropped)
+    frame = cv2.cvtColor(cropped, cv2.COLOR_BGR2HSV)
+
+    # Green Pixel Count
+    # Values may need to be modified depending on lighting
+    Green_Lowerbound = (65, 55, 70)
+    Green_Upperbound = (75, 85, 95)
+    Green_mask = cv2.inRange(frame, Green_Lowerbound, Green_Upperbound)
+    Green_count = np.count_nonzero(Green_mask)
+    # print('Green count:', Green_count)
+    # show_image(name, Green_mask)
+
+    # Blue Pixel Count
+    # Values may need to be modified depending on lighting
+    Blue_Lowerbound = (100, 130, 75)
+    Blue_Upperbound = (115, 145, 99)
+    Blue_mask = cv2.inRange(frame, Blue_Lowerbound, Blue_Upperbound)
+    Blue_count = np.count_nonzero(Blue_mask)
+    # print('Blue count:', Blue_count)
+    # show_image(name, Blue_mask)
+
     if Green_count == 0:
-        steer = 1
+        steer = 1  # turn right
     elif Blue_count == 0:
-        steer = 0
+        steer = 0  # turn left
     else:
-        steer = Green_count/Blue_count
+        steer = Green_count/Blue_count  # not correct
+
     return steer
