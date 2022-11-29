@@ -8,6 +8,7 @@ import signal
 import numpy as np
 import yaml
 import math
+import time
 
 
 class Autow:
@@ -27,7 +28,8 @@ class Autow:
         self.xout.setStreamName("rgb")
         self.cam.preview.link(self.xout.input)
         self.target_id = target_aruco_id
-        self.hitch_d = 0.065  # cm
+        self.hitch_ar = 0.065
+        self.hitch_cam = 0.146
 
         self.steer_buff = []
 
@@ -71,19 +73,27 @@ class Autow:
                 target_center = np.mean(target_corners, axis=0)
                 target_height = abs(target_corners[2, 1]-target_corners[0, 1])
                 # print(f"target @ {target_center} with height {target_height/frame.shape[0]}")
-                if target_height/frame.shape[0] >= 0.28:
+                if target_height/frame.shape[0] >= 0.26:
+                    print("target reached")
+                    self.vesc.set_throttle(-0.1)
+                    time.sleep(0.2)
+                    print("hitching")
                     self.vesc.set_throttle(0)
-                    continue
+                    time.sleep(0.5)
+                    print("hitched")
+                    self.vesc.run(0.5, 0.15)
+                    time.sleep(0.2)
+                    break
                 print(f"target angle ")
                 # self.steer_buff.append(
                 #     self.calc_angle(frame.shape[1], target_center))
                 self.steer_buff.append(self.calc_angle_hitch(
-                    self.hitch_d, -tvecs[0,0,0], tvecs[0, 0, 2], theta))
+                    self.hitch_ar, self.hitch_cam, -tvecs[0,0,0], tvecs[0, 0, 2], theta))
                 if len(self.steer_buff) >= 2:
                     ave_steer = np.average(
                         self.steer_buff, weights=np.linspace(0, 1, len(self.steer_buff)))
-                    self.vesc.run(ave_steer, -(0.1 - abs(ave_steer-0.5)/5)
-                                  * (1-target_height/frame.shape[0]/0.4))
+                    self.vesc.run(ave_steer*1.1, -(0.15 - abs(ave_steer-0.5)/10)
+                                  * (1-target_height/frame.shape[0]/0.6))
                     self.steer_buff = []
 
             device.close()
@@ -93,13 +103,24 @@ class Autow:
     def get_area(self, x, y):
         return 0.5*np.abs(np.dot(x, np.roll(y, 1))-np.dot(y, np.roll(x, 1)))
 
-    def calc_angle_hitch(self, h, x, z, theta):
-        z = z-0.08
+    def calc_angle_hitch(self, h_ar, h_cam, x, z, theta):
+        """
+        Calculate steering angle for given hitch offset and target position
+        Args:
+            h_ar (float): hitch offset of ar tag
+            h_cam (float): hitch offset of camera
+            x (float): target x position
+            z (float): target z position
+            theta (float): target angle
+        Returns:
+            float: steering angle
+        """
+        z = z-h_cam
         theta_a = np.arctan(x/z)
         print(f"theta_a: {theta_a}")
         d = math.sqrt(x**2 + z**2)
         theta_hd = np.arctan(z/x)-(math.pi/2-theta)
-        theta_o = np.arctan(h*math.sin(theta_hd)/(d-h*math.cos(theta_hd)))*x/abs(x)
+        theta_o = np.arctan(h_ar*math.sin(theta_hd)/(d-h_ar*math.cos(theta_hd)))*x/abs(x)
         theta_s = (theta_a-theta_o)*3
         print(theta_s)
         return (theta_s+math.pi/2)/math.pi

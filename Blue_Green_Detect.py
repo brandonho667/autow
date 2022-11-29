@@ -101,10 +101,15 @@ def blue_green_steer_direction(frame):
     # show_image(name, Blue_mask)
 
     if Green_count == 0:
-        steer = 1  # turn right
+        return 0
     elif Blue_count == 0:
-        steer = 0  # turn left
-    else:
-        steer = Green_count/Blue_count  # not correct
+        return 1
 
-    return steer
+    color_ratio = Green_count/Blue_count
+
+    if color_ratio > 1.5:
+        return 0.7
+    elif color_ratio < 0.5:
+        return 0.3
+    else:
+        return 0.5 

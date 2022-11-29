@@ -2,8 +2,6 @@ import cv2 as cv2 #importing the library
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-import imutils
-import argparse
 
 def show_image(name,img): #function for displaying the image
     cv2.imshow(name,img)

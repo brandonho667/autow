@@ -63,13 +63,20 @@ class LaneFollower:
                     averaged_lines[0], averaged_lines[1])
                 if intersection == -1:
                     intersection = (copy.shape[1]//2, copy.shape[0]//2)
-                print(f"intersection @ {intersection}")
+                # print(f"intersection @ {intersection}")
                 self.steer_buff.append(
-                    self.calc_angle(copy.shape[1], intersection))
-                if len(self.steer_buff) >= 7:
+                    self.calc_angle(copy, intersection))
+                if len(self.steer_buff) >= 5:
                     ave_steer = np.average(
                         self.steer_buff, weights=np.linspace(0, 1, len(self.steer_buff)))
-                    self.vesc.run(ave_steer, 0.2 - abs(ave_steer-0.5)/5)
+                    smooth = ave_steer
+                    # if ave_steer < 0.3:
+                    #     smooth = 0.1
+                    # elif ave_steer > 0.7:
+                    #     smooth = 0.9
+                    # else:
+                    #     smooth = 0.5
+                    self.vesc.run(ave_steer, 0.15 - abs(ave_steer-0.5)/5)
                     self.steer_buff = []
                 # black_lines = display_lines(copy, averaged_lines)
                 # # taking wighted sum of original image and lane lines image
@@ -104,10 +111,15 @@ class LaneFollower:
             return x, y
 
     # calc steering for given center point
-    def calc_angle(self, width, center_pt):
+    def calc_angle(self, frame, center_pt):
+        width, height = frame.shape[1], frame.shape[0]
         x, y = center_pt
-        print(x/width)
-        return x/width
+        x -= width/2
+        if abs(x) < 0.01:
+            return 0.5
+        y = height - y
+        angle = np.arctan(y/x)*1.3
+        return angle/np.pi + 0.5
 
     def stop(self, signal, frame):
         print("gracefully stopping...")

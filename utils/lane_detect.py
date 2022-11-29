@@ -6,8 +6,8 @@ import sys
 
 def show_image(name, img):  # function for displaying the image
     cv2.imshow(name, img)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    cv2.waitKey(1)
+    # cv2.destroyAllWindows()
 
 def hsv(image):
     return cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
