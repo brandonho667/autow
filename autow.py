@@ -24,7 +24,7 @@ class Autow:
         cam.setPreviewSize(640, 480)
         cam.setInterleaved(False)
 
-        xout = self.pipeline.create(dai.node.XLinkOut)
+        xout = pipeline.create(dai.node.XLinkOut)
         xout.setStreamName("rgb")
         cam.preview.link(self.xout.input)
 
@@ -33,7 +33,7 @@ class Autow:
         mtx, dist = yaml.safe_load(open('calibration.yaml'))['camera_matrix'], yaml.safe_load(
             open('calibration.yaml'))['dist_coeff']
         self.mtx, self.dist = np.array(mtx), np.array(dist)
-        self.camera = dai.Device(self.pipeline)
+        self.camera = dai.Device(pipeline)
         print("UVC running")
 
         self.target_id = target_aruco_id
