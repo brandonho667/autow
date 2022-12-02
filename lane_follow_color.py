@@ -6,6 +6,7 @@ import depthai as dai
 import signal
 import numpy as np
 from Blue_Green_Detect import blue_green_steer_direction
+import time
 
 
 class LaneFollower:
@@ -41,10 +42,13 @@ class LaneFollower:
                     print(' No captured frame -- yikes!')
                     continue
                 frame = frame.getCvFrame()
+                # cv2.imwrite('frame.png', frame)
+                # break
                 curr_steer = blue_green_steer_direction(frame)
                 if self.steer != curr_steer:
                     self.steer = curr_steer
                     self.vesc.run(self.steer, 0.2 - abs(self.steer-0.5)/5)
+                    time.sleep(0.5)
                     print("Steer: ", self.steer)
             device.close()
             self.vesc.run(0.5, 0)

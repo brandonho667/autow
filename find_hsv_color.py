@@ -5,7 +5,7 @@ def nothing(x):
     pass
 
 # Load image
-image = cv2.imread('track video data/frame504.jpg')
+image = cv2.imread('images/frame.png')
 #image = cv2.flip(image,0)
 image = cv2.resize(image,(600,400))
 

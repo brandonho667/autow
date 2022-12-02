@@ -32,6 +32,7 @@ class Autow:
         self.hitch_cam = 0.146
 
         self.steer_buff = []
+        self.init_time = time.perf_counter()
 
     def run(self):
         arucoDict = aruco.Dictionary_get(aruco.DICT_6X6_50)
@@ -75,25 +76,28 @@ class Autow:
                 # print(f"target @ {target_center} with height {target_height/frame.shape[0]}")
                 if target_height/frame.shape[0] >= 0.26:
                     print("target reached")
-                    self.vesc.set_throttle(-0.1)
-                    time.sleep(0.2)
+                    self.vesc.set_throttle(-0.05)
+                    time.sleep(0.1)
                     print("hitching")
                     self.vesc.set_throttle(0)
-                    time.sleep(0.5)
+                    time.sleep(1)
                     print("hitched")
                     self.vesc.run(0.5, 0.15)
-                    time.sleep(0.2)
+                    time.sleep(0.1)
                     break
-                print(f"target angle ")
                 # self.steer_buff.append(
                 #     self.calc_angle(frame.shape[1], target_center))
                 self.steer_buff.append(self.calc_angle_hitch(
                     self.hitch_ar, self.hitch_cam, -tvecs[0,0,0], tvecs[0, 0, 2], theta))
-                if len(self.steer_buff) >= 2:
+                if len(self.steer_buff) >= 5:
+                    # print(f"time elapsed: {time.perf_counter()-self.init_time}")
+                    self.init_time = time.perf_counter()
                     ave_steer = np.average(
-                        self.steer_buff, weights=np.linspace(0, 1, len(self.steer_buff)))
-                    self.vesc.run(ave_steer*1.1, -(0.15 - abs(ave_steer-0.5)/10)
-                                  * (1-target_height/frame.shape[0]/0.6))
+                        self.steer_buff, weights=np.linspace(0, 1, len(self.steer_buff)))*1.15
+                    print(f"ratio {target_height/frame.shape[0]}")
+                    throttle = -(0.1 - abs(ave_steer-0.5)/15)*(1-target_height/frame.shape[0]*2)
+                    print(f"steer: {ave_steer}, throttle: {throttle}")
+                    self.vesc.run(ave_steer, throttle)
                     self.steer_buff = []
 
             device.close()
@@ -115,14 +119,14 @@ class Autow:
         Returns:
             float: steering angle
         """
-        z = z-h_cam
+        z = z-h_cam-0.08
         theta_a = np.arctan(x/z)
-        print(f"theta_a: {theta_a}")
+        # print(f"theta_a: {theta_a}")
         d = math.sqrt(x**2 + z**2)
         theta_hd = np.arctan(z/x)-(math.pi/2-theta)
         theta_o = np.arctan(h_ar*math.sin(theta_hd)/(d-h_ar*math.cos(theta_hd)))*x/abs(x)
         theta_s = (theta_a-theta_o)*3
-        print(theta_s)
+        # print(theta_s)
         return (theta_s+math.pi/2)/math.pi
 
     # calc steering for given center point

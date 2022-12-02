@@ -44,34 +44,34 @@ def crop_bottom_half(image):  # Delete Top half of image
     return cropped_img
 
 
-name = 'image'
-path = 'frame638.jpg'
-frame = cv2.imread(path)
-frame = cv2.resize(frame, (600, 400))
-frame = cv2.flip(frame, -1)
-copy = np.copy(frame)
-cropped = crop_bottom_half(frame)
-frame = gauss(cropped)
-frame = cv2.cvtColor(cropped, cv2.COLOR_BGR2HSV)
-show_image(name, frame)
+# name = 'image'
+# path = 'frame638.jpg'
+# frame = cv2.imread(path)
+# frame = cv2.resize(frame, (600, 400))
+# frame = cv2.flip(frame, -1)
+# copy = np.copy(frame)
+# cropped = crop_bottom_half(frame)
+# frame = gauss(cropped)
+# frame = cv2.cvtColor(cropped, cv2.COLOR_BGR2HSV)
+# show_image(name, frame)
 
-# Green Pixel Count
-# Values may need to be modified depending on lighting
-Green_Lowerbound = (65, 55, 70)
-Green_Upperbound = (75, 85, 95)
-Green_mask = cv2.inRange(frame, Green_Lowerbound, Green_Upperbound)
-Green_count = np.count_nonzero(Green_mask)
-print('Green count:', Green_count)
-show_image(name, Green_mask)
+# # Green Pixel Count
+# # Values may need to be modified depending on lighting
+# Green_Lowerbound = (65, 55, 70)
+# Green_Upperbound = (75, 85, 95)
+# Green_mask = cv2.inRange(frame, Green_Lowerbound, Green_Upperbound)
+# Green_count = np.count_nonzero(Green_mask)
+# print('Green count:', Green_count)
+# show_image(name, Green_mask)
 
-# Blue Pixel Count
-# Values may need to be modified depending on lighting
-Blue_Lowerbound = (100, 130, 75)
-Blue_Upperbound = (115, 145, 99)
-Blue_mask = cv2.inRange(frame, Blue_Lowerbound, Blue_Upperbound)
-Blue_count = np.count_nonzero(Blue_mask)
-print('Blue count:', Blue_count)
-show_image(name, Blue_mask)
+# # Blue Pixel Count
+# # Values may need to be modified depending on lighting
+# Blue_Lowerbound = (100, 130, 75)
+# Blue_Upperbound = (115, 145, 99)
+# Blue_mask = cv2.inRange(frame, Blue_Lowerbound, Blue_Upperbound)
+# Blue_count = np.count_nonzero(Blue_mask)
+# print('Blue count:', Blue_count)
+# show_image(name, Blue_mask)
 
 
 def blue_green_steer_direction(frame):
@@ -88,7 +88,7 @@ def blue_green_steer_direction(frame):
     Green_Upperbound = (75, 85, 95)
     Green_mask = cv2.inRange(frame, Green_Lowerbound, Green_Upperbound)
     Green_count = np.count_nonzero(Green_mask)
-    # print('Green count:', Green_count)
+    print('Green count:', Green_count)
     # show_image(name, Green_mask)
 
     # Blue Pixel Count
@@ -97,19 +97,21 @@ def blue_green_steer_direction(frame):
     Blue_Upperbound = (115, 145, 99)
     Blue_mask = cv2.inRange(frame, Blue_Lowerbound, Blue_Upperbound)
     Blue_count = np.count_nonzero(Blue_mask)
-    # print('Blue count:', Blue_count)
+    print('Blue count:', Blue_count)
     # show_image(name, Blue_mask)
 
+    if Green_count == 0 and Blue_count == 0:
+        return 0.5
     if Green_count == 0:
-        return 0
+        return 0.05
     elif Blue_count == 0:
-        return 1
+        return 0.8
 
     color_ratio = Green_count/Blue_count
 
-    if color_ratio > 1.5:
-        return 0.7
-    elif color_ratio < 0.5:
-        return 0.3
+    if color_ratio > 1.2:
+        return 0.8
+    elif color_ratio < 0.8:
+        return 0.05
     else:
         return 0.5 

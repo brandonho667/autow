@@ -33,6 +33,7 @@ class LaneFollower:
 
             qRgb = device.getOutputQueue(name="rgb", maxSize=4, blocking=False)
             print("UVC running")
+            self.vesc.set_throttle(0.2)
             while not self.stopped:
                 frame = qRgb.get()
 
@@ -108,7 +109,7 @@ class LaneFollower:
                         smooth = 0.7
                     else:
                         smooth = ave_steer
-                    self.vesc.run(ave_steer, 0.2 - abs(ave_steer-0.5)/10)
+                    self.vesc.set_steer(smooth)
                     self.steer_buff = []
                 # black_lines = display_lines(copy, averaged_lines)
                 # # taking wighted sum of original image and lane lines image
