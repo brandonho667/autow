@@ -3,6 +3,7 @@ import inputs
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
+import signal
 
 MAX_JOYSTICK = 32767
 
@@ -14,7 +15,7 @@ class Driver(Node):
         if len(pads) == 0:
             raise Exception("Couldn't find any Gamepads!")
         self.vesc = VESC('/dev/ttyACM0')
-        self.create_timer(0.1, self.controller_callback)
+        self.create_timer(0, self.controller_callback)
         self.autow_pub = self.create_publisher(String, 'autow', 10)
         self.autow_sub = self.create_subscription(
             String, 'autow_status', self.autow_callback, 10)
@@ -53,11 +54,18 @@ class Driver(Node):
         if not self.move['autow_run']:
             self.vesc.set_throttle(self.move['throttle'])
             self.vesc.set_steer(self.move['steer'])
+    
+    def e_stop(self, signal, frame):
+        self.autow.e_stop()
+        self.vesc.close()
+        self.stop = True
 
 
 def main(args=None):
     rclpy.init(args=args)
     node = Driver()
+    signal.signal(signal.SIGTERM, node.e_stop)
+    signal.signal(signal.SIGINT, node.e_stop)
     rclpy.spin(node)
     rclpy.shutdown()
 
