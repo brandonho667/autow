@@ -1,13 +1,13 @@
 launch:
 
 - node:
-    pkg: "autow"
+    pkg: "autow_ros"
     exec: "autow_node"
-    name: "autow_node"
+    name: "autow"
     namespace: "autow"
 
 - node:
-    pkg: "autow"
+    pkg: "autow_ros"
     exec: "controller_node"
     name: "controller"
     namespace: "controller"
