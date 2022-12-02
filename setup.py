@@ -24,8 +24,8 @@ setup(
  tests_require=['pytest'],
  entry_points={
      'console_scripts': [
-             'autow_node = autow_ros.autow_node:main'
-             'controller = autow_ros.controller:main'
+             'autow_node = autow_ros.autow_node:main',
+             'controller_node = autow_ros.controller:main'
      ],
    },
 )
