@@ -8,6 +8,6 @@ launch:
 
 - node:
     pkg: "autow"
-    exec: "main"
+    exec: "controller_node"
     name: "controller"
     namespace: "controller"

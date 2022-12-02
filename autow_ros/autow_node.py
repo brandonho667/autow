@@ -1,4 +1,10 @@
-from utils.vesc import VESC
+import path
+import sys
+directory = path.path(__file__).abspath()
+ 
+# setting path
+sys.path.append(directory.parent.parent)
+
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
@@ -8,7 +14,6 @@ from autow import Autow
 class AutowControl(Node):
     def __init__(self):
         super().__init__('autow')
-        self.vesc = VESC('/dev/ttyACM0')
         self.autow = Autow(target_aruco_id=13)
         self.autow_sub = self.create_subscription(
             String, 'autow', self.autow_callback, 10)

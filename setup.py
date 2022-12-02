@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'autow'
+package_name = 'autow_ros'
 
 setup(
  name=package_name,
@@ -20,8 +20,8 @@ setup(
  tests_require=['pytest'],
  entry_points={
      'console_scripts': [
-             'autow_node = autow_node:main'
-             'main = controller:main'
+             'autow_node = autow_ros.autow_node:main'
+             'controller = autow_ros.controller:main'
      ],
    },
 )
