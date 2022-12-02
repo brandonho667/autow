@@ -16,10 +16,17 @@ class Driver(Node):
         self.vesc = VESC('/dev/ttyACM0')
         self.create_timer(0.1, self.controller_callback)
         self.autow_pub = self.create_publisher(String, 'autow', 10)
+        self.autow_sub = self.create_subscription(
+            String, 'autow_status', self.autow_callback, 10)
+        self.move = {'steer': 0.5, 'throttle': 0, 'autow_run': False}
+
+    def autow_callback(self, msg):
+        if msg.data == "done":
+            print("Autow done")
+            self.move['autow_run'] = False
 
     def controller_callback(self):
         events = inputs.get_gamepad()
-        move = {'steer': 0, 'throttle': 0, 'stop_autow': False}
         for event in events:
             if event.code == "ABS_X":
                 print(f"steer: {event.state/MAX_JOYSTICK}")
@@ -37,15 +44,15 @@ class Driver(Node):
                     self.move['throttle'] = 0
             elif event.code == "BTN_NORTH":
                 print("Start Pressed, running autow")
+                self.move['autow_run'] = True
                 self.autow_pub.publish(String(data="start"))
             elif event.code == "BTN_SOUTH":
                 print("Stop Pressed, stopping autow")
-                move['stop_autow'] = True
+                self.move['autow_run'] = False
                 self.autow_pub.publish(String(data="stop"))
-        if not move['stop_autow']:
-            print(f"Steer: {move['steer']}, Throttle: {move['throttle']}")
-            self.vesc.set_throttle(move['throttle'])
-            self.vesc.set_steer(move['steer'])
+        if not self.move['stop_autow']:
+            self.vesc.set_throttle(self.move['throttle'])
+            self.vesc.set_steer(self.move['steer'])
 
 
 def main(args=None):

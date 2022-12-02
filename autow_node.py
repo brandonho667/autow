@@ -10,12 +10,14 @@ class AutowControl(Node):
         super().__init__('autow')
         self.vesc = VESC('/dev/ttyACM0')
         self.autow = Autow(target_aruco_id=13)
-        self.autow_pub = self.create_subscription(
+        self.autow_sub = self.create_subscription(
             String, 'autow', self.autow_callback, 10)
+        self.autow_status = self.create_publisher(String, 'autow_status', 10)
 
     def autow_callback(self, msg):
         if msg.data == "start":
             self.autow.run()
+            self.autow_status.publish(String(data="done"))
         elif msg.data == "stop":
             self.autow.e_stop()
 
