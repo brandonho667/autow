@@ -99,7 +99,6 @@ class Autow:
                     self.steer_buff = []
 
             device.close()
-            self.vesc.run(0.5, 0)
             self.vesc.close()
 
     def get_area(self, x, y):

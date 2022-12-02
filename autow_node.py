@@ -17,7 +17,7 @@ class AutowControl(Node):
         if msg.data == "start":
             self.autow.run()
         elif msg.data == "stop":
-            self.autow.stop()
+            self.autow.e_stop()
 
 
 def main(args=None):
