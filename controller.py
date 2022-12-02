@@ -8,7 +8,6 @@ MAX_JOYSTICK = 32767
 
 class Driver():
     def __init__(self):
-        super().__init__('driver')
         pads = inputs.devices.gamepads
         if len(pads) == 0:
             raise Exception("Couldn't find any Gamepads!")
