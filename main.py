@@ -43,11 +43,11 @@ class Driver(Node):
                     self.move['throttle'] = throttle*0.2
                 else:
                     self.move['throttle'] = 0
-            elif event.code == "BTN_NORTH":
+            elif event.code == "BTN_NORTH" and not self.move['autow_run'] and event.state == 1:
                 print("Start Pressed, running autow")
                 self.move['autow_run'] = True
                 self.autow_pub.publish(String(data="start"))
-            elif event.code == "BTN_SOUTH":
+            elif event.code == "BTN_SOUTH" and self.move['autow_run'] and event.state == 1:
                 print("Stop Pressed, stopping autow")
                 self.move['autow_run'] = False
                 self.autow_pub.publish(String(data="stop"))
@@ -56,7 +56,6 @@ class Driver(Node):
             self.vesc.set_steer(self.move['steer'])
     
     def e_stop(self, signal, frame):
-        self.autow.e_stop()
         self.vesc.close()
         self.stop = True
 

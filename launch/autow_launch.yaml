@@ -1,0 +1,13 @@
+launch:
+
+- node:
+    pkg: "autow"
+    exec: "autow_node.py"
+    name: "autow_node"
+    namespace: "autow"
+
+- node:
+    pkg: "autow"
+    exec: "main.py"
+    name: "controller"
+    namespace: "controller"
