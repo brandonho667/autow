@@ -12,7 +12,7 @@ class Driver():
         if len(pads) == 0:
             raise Exception("Couldn't find any Gamepads!")
         self.vesc = VESC('/dev/ttyACM0')
-        self.autow = Autow(target_aruco_id=13)
+        self.autow = Autow(self.vesc, target_aruco_id=13)
         self.stop = False
 
     def run(self):

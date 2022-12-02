@@ -12,10 +12,10 @@ import time
 
 
 class Autow:
-    def __init__(self, target_aruco_id=0):
+    def __init__(self, vesc, target_aruco_id=0):
         self.stopped = False
 
-        self.vesc = vesc.VESC("/dev/ttyACM0")
+        self.vesc = vesc
 
         # Create pipeline
         pipeline = dai.Pipeline()
