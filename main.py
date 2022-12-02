@@ -50,7 +50,7 @@ class Driver(Node):
                 print("Stop Pressed, stopping autow")
                 self.move['autow_run'] = False
                 self.autow_pub.publish(String(data="stop"))
-        if not self.move['stop_autow']:
+        if not self.move['autow_run']:
             self.vesc.set_throttle(self.move['throttle'])
             self.vesc.set_steer(self.move['steer'])
 
