@@ -1,4 +1,6 @@
 from setuptools import setup
+import os
+from glob import glob
 
 package_name = 'autow_ros'
 
@@ -24,4 +26,9 @@ setup(
              'controller = autow_ros.controller:main'
      ],
    },
+   data_files=[
+        # ... Other data files
+        # Include all launch files.
+        (os.path.join('share', package_name), glob('launch/*launch.[pxy][yma]*'))
+    ]
 )
