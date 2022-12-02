@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'my_py_pkg'
+package_name = 'autow'
 
 setup(
  name=package_name,
