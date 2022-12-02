@@ -1,7 +1,6 @@
 import path
 import sys
 directory = path.path(__file__).abspath()
- 
 # setting path
 sys.path.append(directory.parent.parent)
 
