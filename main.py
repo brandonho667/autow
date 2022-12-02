@@ -37,6 +37,7 @@ class Driver(Node):
                 move['stop_autow'] = True
                 self.autow_pub.publish(String(data="stop"))
         if not move['stop_autow']:
+            print(f"Steer: {move['steer']}, Throttle: {move['throttle']}")
             self.vesc.set_throttle(move['throttle'])
             self.vesc.set_steering(move['steer'])
 
