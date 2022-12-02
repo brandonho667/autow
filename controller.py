@@ -12,34 +12,41 @@ class Driver():
         if len(pads) == 0:
             raise Exception("Couldn't find any Gamepads!")
         self.vesc = VESC('/dev/ttyACM0')
-        self.autow = Autow(self.vesc, target_aruco_id=13)
+        self.autow = Autow(target_aruco_id=13)
+        self.move = {'steer': 0.5, 'throttle': 0, 'stop_autow': False}
+
         self.stop = False
 
     def run(self):
 
         while not self.stop:
             events = inputs.get_gamepad()
-            move = {'steer': 0, 'throttle': 0, 'stop_autow': False}
             for event in events:
                 if event.code == "ABS_X":
+                    print(f"steer: {event.state/MAX_JOYSTICK}")
                     steer = (event.state+MAX_JOYSTICK) / (2*MAX_JOYSTICK)
-                    if steer > 0.001:
-                        move['steer'] = steer
+                    if abs(steer-0.5) > 0.005:
+                        self.move['steer'] = steer
+                    else:
+                        self.move['steer'] = 0.5
                 elif event.code == "ABS_RY":
-                    throttle = (-event.state + MAX_JOYSTICK) / MAX_JOYSTICK
-                    if throttle > 0.001:
-                        move['throttle'] = throttle
+                    print(f"throttle: {event.state/MAX_JOYSTICK}")
+                    throttle = -event.state / MAX_JOYSTICK
+                    if abs(throttle) > 0.005:
+                        self.move['throttle'] = throttle*0.2
+                    else:
+                        self.move['throttle'] = 0
                 elif event.code == "BTN_NORTH":
                     print("Start Pressed, running autow")
                     self.autow.run()
 
-            if not move['stop_autow']:
-                self.vesc.set_throttle(move['throttle'])
-                self.vesc.set_steering(move['steer'])
+            self.vesc.set_throttle(self.move['throttle'])
+            self.vesc.set_steer(self.move['steer'])
 
-        def e_stop(self):
-            self.autow.stop()
-            self.stop = True
+    def e_stop(self, signal, frame):
+        self.autow.e_stop()
+        self.vesc.close()
+        self.stop = True
 
 
 def main():
