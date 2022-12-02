@@ -2,12 +2,12 @@ launch:
 
 - node:
     pkg: "autow"
-    exec: "autow_node.py"
+    exec: "autow_node"
     name: "autow_node"
     namespace: "autow"
 
 - node:
     pkg: "autow"
-    exec: "main.py"
+    exec: "main"
     name: "controller"
     namespace: "controller"
