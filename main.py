@@ -45,7 +45,7 @@ class Driver(Node):
         if not move['stop_autow']:
             print(f"Steer: {move['steer']}, Throttle: {move['throttle']}")
             self.vesc.set_throttle(move['throttle'])
-            self.vesc.set_steering(move['steer'])
+            self.vesc.set_steer(move['steer'])
 
 
 def main(args=None):
