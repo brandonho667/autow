@@ -1,4 +1,4 @@
-from utils.vesc import VESC
+from .utils.vesc import VESC
 import inputs
 import rclpy
 from rclpy.node import Node
