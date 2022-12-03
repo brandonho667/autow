@@ -33,7 +33,7 @@ class AutowControl(Node):
 
         self.steer_buff = []
         self.autow_sub = self.create_subscription(
-            String, 'autow', self.autow_callback, 10)
+            String, 'autow_run', self.autow_callback, 10)
         self.autow_status = self.create_publisher(String, 'autow_status', 10)
         self.driver_pub = self.create_publisher(Float64MultiArray, 'driver', 10)
 

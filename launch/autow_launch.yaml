@@ -3,17 +3,17 @@ launch:
 - node:
     pkg: "autow_ros"
     exec: "autow_node"
-    name: "autow"
+    name: "autow_node"
     namespace: "autow"
 
 - node:
     pkg: "autow_ros"
     exec: "controller_node"
     name: "controller"
-    namespace: "controller"
+    namespace: "autow"
 
 - node:
     pkg: "autow_ros"
     exec: "driver_node"
     name: "driver"
-    namespace: "driver"
+    namespace: "autow"

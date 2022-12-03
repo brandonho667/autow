@@ -16,7 +16,7 @@ class Controller(Node):
         if len(pads) == 0:
             raise Exception("Couldn't find any Gamepads!")
         self.create_timer(0, self.controller_callback)
-        self.autow_pub = self.create_publisher(String, 'autow', 10)
+        self.autow_pub = self.create_publisher(String, 'autow_run', 10)
         self.autow_sub = self.create_subscription(
             String, 'autow_status', self.autow_callback, 10)
         self.driver_pub = self.create_publisher(Float64MultiArray, 'drive', 10)
