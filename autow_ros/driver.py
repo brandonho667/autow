@@ -16,7 +16,7 @@ class Driver(Node):
             Float64MultiArray, 'drive', self.driver_callback, 10)
 
 
-    def controller_callback(self, msg):
+    def driver_callback(self, msg):
         if msg.data[0] == -1:
             self.vesc.set_throttle(msg.data[1])
         else:
