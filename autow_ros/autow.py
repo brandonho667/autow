@@ -2,7 +2,6 @@ from .utils import vesc
 import cv2
 import cv2.aruco as aruco
 import numpy as np
-from utils.lane_detect import *
 import depthai as dai
 import signal
 import numpy as np
