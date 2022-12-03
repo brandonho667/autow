@@ -36,12 +36,14 @@ class AutowControl(Node):
             String, 'autow_run', self.autow_callback, 10)
         self.autow_status = self.create_publisher(String, 'autow_status', 10)
         self.driver_pub = self.create_publisher(Float64MultiArray, 'driver', 10)
-        self.calibration = yaml.safe_load(open('calibration.yaml'))
+        self.calibration = yaml.safe_load(open('src/autow/config/calibration.yaml'))
+        self.stopped = False
 
 
 
     def autow_callback(self, msg):
         if msg.data == "start":
+            self.stopped = False
             self.run()
             self.autow_status.publish(String(data="done"))
         elif msg.data == "stop":
