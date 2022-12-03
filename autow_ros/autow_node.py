@@ -50,7 +50,6 @@ class AutowControl(Node):
     def autow_callback(self, msg):
         if msg.data == "start":
             self.stopped = False
-            self.autow_status.publish(String(data="done"))
         elif msg.data == "stop":
             self.stopped = True
 
@@ -93,7 +92,7 @@ class AutowControl(Node):
                 self.driver_pub.publish(Float64MultiArray(data=[-1, 0]))
                 time.sleep(1)
                 print("hitched")
-                self.qRgb.close()
+                self.autow_status.publish(String(data="done"))
                 self.stopped = True
                 return
             # self.steer_buff.append(
