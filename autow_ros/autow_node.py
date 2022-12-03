@@ -36,6 +36,9 @@ class AutowControl(Node):
             String, 'autow_run', self.autow_callback, 10)
         self.autow_status = self.create_publisher(String, 'autow_status', 10)
         self.driver_pub = self.create_publisher(Float64MultiArray, 'driver', 10)
+        self.calibration = yaml.safe_load(open('share/config/calibration.yaml'))
+
+
 
     def autow_callback(self, msg):
         if msg.data == "start":
@@ -47,9 +50,7 @@ class AutowControl(Node):
     def run(self):
         arucoDict = aruco.Dictionary_get(aruco.DICT_6X6_50)
         arucoParams = aruco.DetectorParameters_create()
-        mtx, dist = yaml.safe_load(open('calibration.yaml'))['camera_matrix'], yaml.safe_load(
-            open('calibration.yaml'))['dist_coeff']
-        mtx, dist = np.array(mtx), np.array(dist)
+        mtx, dist = np.array(self.calibration['camera_matrix']), np.array(self.calibration['dist_coeff'])
         # Connect to device and start pipeline
         with dai.Device(self.pipeline) as device:
 
