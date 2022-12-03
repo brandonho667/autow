@@ -16,6 +16,6 @@ Automatic Towing Project for ECE148
 
 ## Helpful Docker commands on Robocar
 
-`robocar_docker ros_container`
-`docker start  \`docker ps -q -l\``
-`docker attach \`docker ps -q -l\``
+ - `robocar_docker ros_container`
+ - ``docker start  `docker ps -q -l` ``
+ - ``docker attach `docker ps -q -l` ``
