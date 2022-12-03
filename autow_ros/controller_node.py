@@ -1,24 +1,25 @@
-from .utils.vesc import VESC
 import inputs
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import String
+from std_msgs.msg import String, Float64MultiArray
 import signal
 
 MAX_JOYSTICK = 32767
 
 
-class Driver(Node):
+class Controller(Node):
     def __init__(self):
         super().__init__('driver')
+        signal.signal(signal.SIGTERM, self.e_stop)
+        signal.signal(signal.SIGINT, self.e_stop)
         pads = inputs.devices.gamepads
         if len(pads) == 0:
             raise Exception("Couldn't find any Gamepads!")
-        self.vesc = VESC('/dev/ttyACM0')
         self.create_timer(0, self.controller_callback)
         self.autow_pub = self.create_publisher(String, 'autow', 10)
         self.autow_sub = self.create_subscription(
             String, 'autow_status', self.autow_callback, 10)
+        self.driver_pub = self.create_publisher(Float64MultiArray, 'drive', 10)
         self.move = {'steer': 0.5, 'throttle': 0, 'autow_run': False}
 
     def autow_callback(self, msg):
@@ -52,19 +53,17 @@ class Driver(Node):
                 self.move['autow_run'] = False
                 self.autow_pub.publish(String(data="stop"))
         if not self.move['autow_run']:
-            self.vesc.set_throttle(self.move['throttle'])
-            self.vesc.set_steer(self.move['steer'])
+            self.driver_pub.publish(Float64MultiArray(data=[
+                self.move['steer'], self.move['throttle']]))
     
     def e_stop(self, signal, frame):
-        self.vesc.close()
         self.stop = True
 
 
 def main(args=None):
     rclpy.init(args=args)
-    node = Driver()
-    signal.signal(signal.SIGTERM, node.e_stop)
-    signal.signal(signal.SIGINT, node.e_stop)
+    node = Controller()
+    
     rclpy.spin(node)
     rclpy.shutdown()
 

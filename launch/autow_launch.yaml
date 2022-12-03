@@ -11,3 +11,9 @@ launch:
     exec: "controller_node"
     name: "controller"
     namespace: "controller"
+
+- node:
+    pkg: "autow_ros"
+    exec: "driver_node"
+    name: "driver"
+    namespace: "driver"

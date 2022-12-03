@@ -26,6 +26,7 @@ setup(
      'console_scripts': [
              'autow_node = autow_ros.autow_node:main',
              'controller_node = autow_ros.controller_node:main'
+             'driver_node = autow_ros.driver:main'
      ],
    },
 )
