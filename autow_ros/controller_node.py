@@ -9,9 +9,7 @@ MAX_JOYSTICK = 32767
 
 class Controller(Node):
     def __init__(self):
-        super().__init__('driver')
-        signal.signal(signal.SIGTERM, self.e_stop)
-        signal.signal(signal.SIGINT, self.e_stop)
+        super().__init__('controller')
         pads = inputs.devices.gamepads
         if len(pads) == 0:
             raise Exception("Couldn't find any Gamepads!")
@@ -55,9 +53,6 @@ class Controller(Node):
         if not self.move['autow_run']:
             self.driver_pub.publish(Float64MultiArray(data=[
                 self.move['steer'], self.move['throttle']]))
-    
-    def e_stop(self, signal, frame):
-        self.stop = True
 
 
 def main(args=None):
