@@ -1,9 +1,3 @@
-import path
-import sys
-directory = path.path(__file__).abspath()
-# setting path
-sys.path.append(directory.parent.parent)
-
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
