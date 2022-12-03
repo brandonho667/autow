@@ -35,7 +35,7 @@ class AutowControl(Node):
         self.autow_sub = self.create_subscription(
             String, 'autow_run', self.autow_callback, 10)
         self.autow_status = self.create_publisher(String, 'autow_status', 10)
-        self.driver_pub = self.create_publisher(Float64MultiArray, 'driver', 10)
+        self.driver_pub = self.create_publisher(Float64MultiArray, 'drive', 10)
         self.calibration = yaml.safe_load(open('src/autow/config/calibration.yaml'))
         self.stopped = False
 
