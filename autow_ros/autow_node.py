@@ -35,7 +35,7 @@ class AutowControl(Node):
         self.arucoDict = aruco.Dictionary_get(aruco.DICT_6X6_50)
         self.arucoParams = aruco.DetectorParameters_create()
         self.mtx, self.dist = np.array(calibration['camera_matrix']), np.array(calibration['dist_coeff'])
-        self.stopped = False
+        self.stopped = True
 
         self.autow_sub = self.create_subscription(
             String, 'autow_run', self.autow_callback, 10)
@@ -51,7 +51,6 @@ class AutowControl(Node):
     def autow_callback(self, msg):
         if msg.data == "start":
             self.stopped = False
-            self.run()
             self.autow_status.publish(String(data="done"))
         elif msg.data == "stop":
             if not self.qRgb.isClosed():
