@@ -23,7 +23,6 @@ class Driver(Node):
     
     def stop(self):
         self.vesc.close()
-        self.stop = True
 
 
 def main(args=None):

@@ -43,8 +43,7 @@ class AutowControl(Node):
         self.driver_pub = self.create_publisher(Float64MultiArray, 'drive', 10)
         self.create_timer(0, self.run)
         self.device = dai.Device(self.pipeline)
-        self.qRgb = self.device.getOutputQueue(name="rgb", maxSize=4, blocking=False)
-        self.qRgb.close()
+        self.qRgb = self.device.getOutputQueue(name="rgb", maxSize=1, blocking=False)
 
 
 
@@ -53,15 +52,10 @@ class AutowControl(Node):
             self.stopped = False
             self.autow_status.publish(String(data="done"))
         elif msg.data == "stop":
-            if not self.qRgb.isClosed():
-                self.qRgb.close()
             self.stopped = True
 
     def run(self):
-        if self.qRgb.isClosed() and not self.stopped:
-            self.qRgb = self.device.getOutputQueue(name="rgb", maxSize=4, blocking=False)
-            print("UVC running")
-        
+       
         if not self.stopped:
             frame = self.qRgb.get()
 
@@ -149,6 +143,7 @@ class AutowControl(Node):
         return 1-x/width
 
     def stop(self):
+        self.qRgb.close()
         self.device.close()
         self.stopped = True
 
