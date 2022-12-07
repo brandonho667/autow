@@ -26,8 +26,8 @@ class AutowControl(Node):
         self.xout.setStreamName("rgb")
         self.cam.preview.link(self.xout.input)
         self.target_id = target_aruco_id
-        self.hitch_ar = 0.065
-        self.hitch_cam = 0.146
+        self.hitch_ar = 0.095
+        self.hitch_cam = 0.11
 
         self.steer_buff = []
         
