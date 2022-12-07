@@ -89,7 +89,7 @@ class AutowControl(Node):
                 # self.driver_pub.publish(Float64MultiArray(data=[-1, -0.05]))
                 # time.sleep(0.1)
                 # print("hitching")
-                # self.driver_pub.publish(Float64MultiArray(data=[-1, 0]))
+                self.driver_pub.publish(Float64MultiArray(data=[0.5, 0]))
                 # time.sleep(1)
                 # print("hitched")
                 self.autow_status.publish(String(data="done"))
