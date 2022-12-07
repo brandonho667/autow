@@ -84,14 +84,14 @@ class AutowControl(Node):
             target_center = np.mean(target_corners, axis=0)
             target_height = abs(target_corners[2, 1]-target_corners[0, 1])
             # print(f"target @ {target_center} with height {target_height/frame.shape[0]}")
-            if target_height/frame.shape[0] >= 0.26:
-                print("target reached")
-                self.driver_pub.publish(Float64MultiArray(data=[-1, -0.05]))
-                time.sleep(0.1)
-                print("hitching")
-                self.driver_pub.publish(Float64MultiArray(data=[-1, 0]))
-                time.sleep(1)
-                print("hitched")
+            if target_height/frame.shape[0] >= 0.24:
+                # print("target reached")
+                # self.driver_pub.publish(Float64MultiArray(data=[-1, -0.05]))
+                # time.sleep(0.1)
+                # print("hitching")
+                # self.driver_pub.publish(Float64MultiArray(data=[-1, 0]))
+                # time.sleep(1)
+                # print("hitched")
                 self.autow_status.publish(String(data="done"))
                 self.stopped = True
                 return
@@ -104,7 +104,7 @@ class AutowControl(Node):
                 ave_steer = np.average(
                     self.steer_buff, weights=np.linspace(0, 1, len(self.steer_buff)))*1.15
                 print(f"ratio {target_height/frame.shape[0]}")
-                throttle = -(0.15 - abs(ave_steer-0.5)/15)*(1-target_height/frame.shape[0]*2)
+                throttle = -(0.15 - abs(ave_steer-0.5)/15)*(1-target_height/frame.shape[0]*3)
                 print(f"steer: {ave_steer}, throttle: {throttle}")
                 self.driver_pub.publish(Float64MultiArray(data=[ave_steer, throttle]))
                 self.steer_buff = []
