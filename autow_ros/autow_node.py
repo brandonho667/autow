@@ -99,7 +99,7 @@ class AutowControl(Node):
             #     self.calc_angle(frame.shape[1], target_center))
             self.steer_buff.append(self.calc_angle_hitch(
                 self.hitch_ar, self.hitch_cam, -tvecs[0,0,0], tvecs[0, 0, 2], theta))
-            if len(self.steer_buff) >= 5:
+            if len(self.steer_buff) >= 2:
                 # print(f"time elapsed: {time.perf_counter()-self.init_time}")
                 ave_steer = np.average(
                     self.steer_buff, weights=np.linspace(0, 1, len(self.steer_buff)))*1.15
