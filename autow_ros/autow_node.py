@@ -10,6 +10,7 @@ import time
 import yaml
 import math
 import signal
+from playsound import playsound
 
 class AutowControl(Node):
     def __init__(self):
@@ -18,7 +19,6 @@ class AutowControl(Node):
         target_aruco_id = 13
         self.pipeline = dai.Pipeline()
         self.cam = self.pipeline.create(dai.node.ColorCamera)
-        # self.cam.setColorOrder(dai.ColorCameraProperties.ColorOrder.RGB)
         self.cam.setPreviewSize(640, 480)
         self.cam.setInterleaved(False)
 
@@ -36,6 +36,7 @@ class AutowControl(Node):
         self.arucoParams = aruco.DetectorParameters_create()
         self.mtx, self.dist = np.array(calibration['camera_matrix']), np.array(calibration['dist_coeff'])
         self.stopped = True
+        self.foundAR = False
 
         self.autow_sub = self.create_subscription(
             String, 'autow_run', self.autow_callback, 10)
@@ -51,6 +52,7 @@ class AutowControl(Node):
         if msg.data == "start":
             self.stopped = False
         elif msg.data == "stop":
+            self.foundAR = False
             self.stopped = True
 
     def run(self):
@@ -62,14 +64,17 @@ class AutowControl(Node):
                 print(' No captured frame -- yikes!')
                 return
             frame = frame.getCvFrame()
-            # frame = cv2.flip(frame, -1)
-
             # find center of ar tag
             (corners, ids, rejected) = cv2.aruco.detectMarkers(frame, self.arucoDict,
                                                                 parameters=self.arucoParams)
             if len(corners) == 0:
+                if not self.foundAR:
+                    playsound('src/autow_ros/sounds/lost_ar.mp3', False)
+                    self.autow_status.publish(String(data="done"))
+                    self.stopped = True
                 self.driver_pub.publish(Float64MultiArray(data=[-1, 0]))
                 return
+            self.foundAR = True
             ids = ids.flatten()
             if self.target_id not in ids:
                 self.driver_pub.publish(Float64MultiArray(data=[-1, 0]))
@@ -79,28 +84,19 @@ class AutowControl(Node):
             rvecs, tvecs, _ = aruco.estimatePoseSingleMarkers(
                 corners, 0.05, self.mtx, self.dist)
             theta = (rvecs[0, 0, 0]/math.pi*rvecs[0, 0, 2])
-            # ts = (rvecs[0, 0, 0],rvecs[0,0,1],rvecs[0, 0, 2])
-            # print(f"theta: {theta}, x: {-tvecs[0,0,0]}, z: {tvecs[0, 0, 2]}")
-            target_center = np.mean(target_corners, axis=0)
+
             target_height = abs(target_corners[2, 1]-target_corners[0, 1])
-            # print(f"target @ {target_center} with height {target_height/frame.shape[0]}")
             if target_height/frame.shape[0] >= 0.24:
-                # print("target reached")
-                # self.driver_pub.publish(Float64MultiArray(data=[-1, -0.05]))
-                # time.sleep(0.1)
-                # print("hitching")
+                # target is big enough, hitched
                 self.driver_pub.publish(Float64MultiArray(data=[0.5, 0]))
-                # time.sleep(1)
-                # print("hitched")
                 self.autow_status.publish(String(data="done"))
+                self.foundAR = False
                 self.stopped = True
                 return
-            # self.steer_buff.append(
-            #     self.calc_angle(frame.shape[1], target_center))
+
             self.steer_buff.append(self.calc_angle_hitch(
                 self.hitch_ar, self.hitch_cam, -tvecs[0,0,0]-0.01, tvecs[0, 0, 2], theta))
             if len(self.steer_buff) >= 4:
-                # print(f"time elapsed: {time.perf_counter()-self.init_time}")
                 ave_steer = np.average(
                     self.steer_buff, weights=np.linspace(0, 1, len(self.steer_buff)))*1.15
                 print(f"ratio {target_height/frame.shape[0]}")
@@ -145,6 +141,8 @@ class AutowControl(Node):
         self.qRgb.close()
         self.device.close()
         self.stopped = True
+        self.foundAR = False
+
 
 def main(args=None):
     rclpy.init(args=args)

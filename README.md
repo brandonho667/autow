@@ -19,3 +19,7 @@ Automatic Towing Project for ECE148
  - `robocar_docker ros_container`
  - ``docker start  `docker ps -q -l` ``
  - ``docker attach `docker ps -q -l` ``
+
+## Audio on Jetson Nano
+ - `sudo pulseaudio --system -D` to start PulseAudio
+ - `pax11publish -r` to enable connection to PulseAudio
