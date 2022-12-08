@@ -69,7 +69,7 @@ class AutowControl(Node):
                                                                 parameters=self.arucoParams)
             if len(corners) == 0:
                 if not self.foundAR:
-                    playsound('src/autow_ros/sounds/lost_ar.mp3', False)
+                    playsound('src/autow/sounds/lost_ar.mp3', False)
                     self.autow_status.publish(String(data="done"))
                     self.stopped = True
                 self.driver_pub.publish(Float64MultiArray(data=[-1, 0]))
