@@ -2,7 +2,7 @@
 
 Automatic Towing Project for ECE148 - Autonomous Vehicles
 
-[![tow.jpg](https://commons.wikimedia.org/wiki/File:Autow.jpg)]
+[![tow.jpg](https://upload.wikimedia.org/wikipedia/commons/0/06/Autow.jpg)](https://www.youtube.com/watch?v=caYrD2hRw2U)
 <p align=center> Autow Demo Video </p>
 
 ## Features
